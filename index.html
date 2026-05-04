@@ -456,6 +456,8 @@ function renderCreateAction() {
         <div><label>Kosten in CD</label><input type="number" id="new-action-cost" placeholder="1000" inputmode="numeric" /></div>
         <div><label>Status</label><select id="new-action-status"><option value="aktiv">Sofort aktiv</option><option value="inaktiv">Inaktiv</option></select></div>
       </div>
+      <label>Link (optional)</label>
+      <input type="text" id="new-action-link" placeholder="https://www.zalando.de/tasche..." />
       <button class="btn btn-primary" style="margin-top:18px" onclick="createAction()">Aktion erstellen</button>
       <div class="feedback" id="action-feedback"></div>
     </div>
@@ -482,14 +484,16 @@ async function createAction() {
   const name = document.getElementById('new-action-name').value.trim();
   const cost = parseInt(document.getElementById('new-action-cost').value);
   const status = document.getElementById('new-action-status').value;
+  const link = document.getElementById('new-action-link').value.trim();
   const fb = document.getElementById('action-feedback');
   if (!name || !cost || cost <= 0) { fb.style.color = '#c93838'; fb.textContent = 'Bitte alle Felder korrekt ausfüllen'; return; }
   fb.style.color = '#6b7280'; fb.textContent = 'Wird gespeichert...';
-  const result = await apiCall('createAction', { name, cost, status });
+  const result = await apiCall('createAction', { name, cost, status, link });
   if (result && result.success) {
     fb.style.color = '#2d8a3e'; fb.textContent = `Aktion "${name}" erstellt ✓`;
     document.getElementById('new-action-name').value = '';
     document.getElementById('new-action-cost').value = '';
+    document.getElementById('new-action-link').value = '';
     loadData();
   } else {
     fb.style.color = '#c93838'; fb.textContent = 'Fehler: Bitte Apps Script Verbindung prüfen';
@@ -511,7 +515,11 @@ function redeemAction(id) {
   if (!a) return;
   pendingRedeem = a;
   document.getElementById('modal-title').textContent = 'Coupon einlösen';
-  document.getElementById('modal-text').innerHTML = `Möchtest du <strong style="color:#1c4980">${a.name}</strong> für <strong style="color:#1c4980">${a.cost.toLocaleString()} CD</strong> einlösen?<br><br>Diese Aktion kann nicht rückgängig gemacht werden.`;
+  let extraText = '';
+  if (a.link && a.link.length > 0) {
+    extraText = '<br><br><span style="color:#2d8a3e">✨ Nach dem Einlösen öffnet sich ein Link für dich!</span>';
+  }
+  document.getElementById('modal-text').innerHTML = `Möchtest du <strong style="color:#1c4980">${a.name}</strong> für <strong style="color:#1c4980">${a.cost.toLocaleString()} CD</strong> einlösen?<br><br>Diese Aktion kann nicht rückgängig gemacht werden.${extraText}`;
   document.getElementById('modal-confirm').onclick = confirmRedeem;
   document.getElementById('modal').classList.add('open');
 }
@@ -519,10 +527,15 @@ function redeemAction(id) {
 async function confirmRedeem() {
   if (!pendingRedeem) return;
   const redeemData = { id: pendingRedeem.id, name: pendingRedeem.name, cost: pendingRedeem.cost };
+  const linkToOpen = pendingRedeem.link;
   document.getElementById('modal').classList.remove('open');
   pendingRedeem = null;
   showLoading(true);
   await apiCall('redeem', redeemData);
+  // Link öffnen falls vorhanden
+  if (linkToOpen && linkToOpen.length > 0) {
+    window.open(linkToOpen, '_blank');
+  }
   loadData();
 }
 
