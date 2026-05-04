@@ -199,7 +199,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-se
 <script>
 // ===== KONFIGURATION =====
 // Hier deine Apps Script URL einfügen nach dem Setup:
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxARAh4d-rLjw4Wh2aPE8u_k7hw-SZChDwAekcND2TEGZi7Xjq8HfmtxgwskQcebq1HVQ/exec';
+const SCRIPT_URL = 'const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxARAh4d-rLjw4Wh2aPE8u_k7hw-SZChDwAekcND2TEGZi7Xjq8HfmtxgwskQcebq1HVQ/exec';';
 
 // Logins (kannst du hier ändern wenn du willst):
 const USERS = {
@@ -518,10 +518,11 @@ function redeemAction(id) {
 
 async function confirmRedeem() {
   if (!pendingRedeem) return;
-  closeModal();
-  showLoading(true);
-  await apiCall('redeem', { id: pendingRedeem.id, name: pendingRedeem.name, cost: pendingRedeem.cost });
+  const redeemData = { id: pendingRedeem.id, name: pendingRedeem.name, cost: pendingRedeem.cost };
+  document.getElementById('modal').classList.remove('open');
   pendingRedeem = null;
+  showLoading(true);
+  await apiCall('redeem', redeemData);
   loadData();
 }
 
